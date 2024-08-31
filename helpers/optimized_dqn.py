@@ -108,8 +108,8 @@ class OptimizedDQN:
         # of moves in to a memory buffer. We will then create a minibatch and train the model
         # on that batch to try and match the target q values - as the buffer gets filled with
         # "more correct" moves, the training will converge quicker
-
-        self.memory.append(())
+        
+        self.memory.append((state, action, next_state, adjusted_reward, done, next_action))
 
         q_values = next_q_values
         state = next_state
@@ -162,7 +162,7 @@ class OptimizedDQN:
         # TODO
         # get the q values for the actual_q, you will need something similar to the code above
         # what you want is the Q_values for the actions that were taken.
-        actual_q = None
+        actual_q = Q_values.gather(1, action_batch.unsqueeze(1)).squeeze()
 
         # calculate loss
         loss = F.mse_loss(actual_q, target_q, reduction='mean')
