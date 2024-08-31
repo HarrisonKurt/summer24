@@ -27,7 +27,13 @@ class SimpleDQN:
     # it will have two hidden layers
     # we will use ReLU activation function between the layers
 
-    self.q_network = None
+    self.q_network = nn.Sequential(
+      nn.Linear(input_features, hidden_features_l1),
+      nn.ReLU(),
+      nn.Linear(hidden_features_l1, hidden_features_l2),
+      nn.ReLU(),
+      nn.Linear(hidden_features_l2, output_features),
+    )
 
   def epsilon_greedy(self, q_values, epsilon):
     # TODO
@@ -35,7 +41,10 @@ class SimpleDQN:
     # pick a random number, if it's less than epsilon pick a random action
     # if it's greater than epsilon then pick the action that corresponds to the largest item in q_values (e.g., the index of the largest value)
 
-    action = 0
+    if np.random.rand() < epsilon:
+        action = self.env.action_space.sample()
+    else:
+        action = q_values.argmax().item()
     return action
 
   def train(self, training_episodes):
@@ -70,18 +79,18 @@ class SimpleDQN:
         # perform the action
         # use a one-hot vector to build the next state and calculate the next action
 
-        q_values = None
-        action = None
+        q_values = self.q_network(state)
+        action = self.epsilon_greedy(q_values, epsilon)
 
-        ns, reward, truncated, terminated, _ = None
+        ns, reward, truncated, terminated, _ = self.env.step(action)
         done = truncated or terminated
         total_reward += reward
 
         next_state = torch.zeros(1, self.env.observation_space.n)
         next_state[0, ns] = 1.0
 
-        next_q_values = None
-        next_action = None
+        next_q_values = self.q_network(next_state)
+        next_action = self.epsilon_greedy(next_q_values, epsilon)
 
         adjusted_reward = reward
         if reward > 0.0 and done:
@@ -101,7 +110,11 @@ class SimpleDQN:
         # however, if we are "done" we shouldn't add the next move q value because we've already adjusted
         # the rewards and penalties above
 
+        max_next_q_value = next_q_values.max()        
+        target = adjusted_reward + (1-done) * max_next_q_value
         target_q = torch.zeros(1, self.env.action_space.n)
+        target_q[:] = q_values[:]
+        target_q[0, action] = target
 
         # calculate the loss
         loss = F.mse_loss(q_values, target_q, reduction='mean')
