@@ -72,8 +72,31 @@ class TradingDQN:
     # we also have buy_reward, sell_penalty, and hold_reward to try and incentivize certain behaviors.
     # e.g., a high sell reward, makes selling less profitable and will train the model to sell less frequently
     # only include these if include_incentives is set to True
-
     reward = 0
+    if action == 0:
+      # add the latest price to your holdings
+      holdings.push(current_price)
+      if include_incentives:
+        reward = self.buy_reward
+    elif action == 1 and holdings.len() > 0:
+      profit = 0
+
+      if sell_all:
+        while holdings.len() > 0:
+          buy_price = holdings.pop()
+          profit += (current_price - buy_price)
+      else:
+        buy_price = holdings.pop()
+        profit = (current_price - buy_price)
+            
+      # reward is equal to the profit from the transaction (this could be negative)
+      reward = profit
+      if include_incentives:
+        reward -= self.sell_penalty
+    else:
+      if holdings.len() > 0 and include_incentives:
+        reward = self.hold_reward
+
     return reward
 
   def calculate_total_profit(self, data, network, start_day, length, generate_buy_sell_data, sell_all = False):
