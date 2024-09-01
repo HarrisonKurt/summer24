@@ -37,13 +37,12 @@ class Stats:
     fig, axs = plt.subplots(2, 2)
     fig.set_size_inches(12, 8)
 
-    if len(self.epsilons) > 0:
-      axs[0, 0].set_title('epsilon')
-      axs[0, 0].plot(self.epsilons)
-
     if len(self.losses) > 0:
       axs[0, 0].set_title('loss')
       axs[0, 0].plot(self.losses)
+    elif len(self.epsilons) > 0:
+      axs[0, 0].set_title('epsilon')
+      axs[0, 0].plot(self.epsilons)
 
     if len(self.cumulative_rewards) > 0:
       axs[1, 0].set_title('cumulative reward')
@@ -52,16 +51,14 @@ class Stats:
     if len(self.episode_rewards) > 0:
       axs[0, 1].set_title('episode rewards')
       axs[0, 1].plot(self.episode_rewards)
-
-    if len(self.epsilons) > 0:
+    elif len(self.epsilons) > 0:
       axs[0, 1].set_title('epsilon')
       axs[0, 1].plot(self.epsilons)
     
     if len(self.episode_moves) > 0:
       axs[1, 1].set_title('moves per episode')
       axs[1, 1].plot(self.episode_moves)
-
-    if len(self.validation_rewards) > 0:
+    elif len(self.validation_rewards) > 0:
       axs[1, 1].set_title('validation reward')
       axs[1, 1].plot(self.validation_rewards)
 
@@ -70,5 +67,3 @@ class Stats:
     if not os.path.exists("./stats"):
       os.makedirs("./stats")
     plt.savefig(f"./stats/{name}.png")
-
-    plt.show()
